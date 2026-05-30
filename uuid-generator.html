@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UUID Generator — Addon Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2330;
+    --accent: #00e5ff;
+    --accent2: #7c4dff;
+    --green: #00e676;
+    --text: #c9d1e0;
+    --muted: #4a5270;
+    --glow: 0 0 20px rgba(0,229,255,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 60px;
+    overflow-x: hidden;
+  }
+
+  /* bg grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .logo-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: clamp(28px, 6vw, 44px);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    line-height: 1;
+  }
+  h1 span {
+    color: var(--accent);
+    text-shadow: 0 0 24px var(--accent);
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  .card-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  /* Count control */
+  .count-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .count-label {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .count-btns {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .count-btns button {
+    background: var(--bg);
+    border: none;
+    color: var(--accent);
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .count-btns button:hover { background: var(--border); }
+  #count-display {
+    width: 48px;
+    text-align: center;
+    background: var(--bg);
+    border: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    height: 36px;
+    outline: none;
+  }
+  /* preset chips */
+  .presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .chip:hover, .chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.06);
+  }
+
+  /* Generate button */
+  .btn-gen {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-bottom: 20px;
+  }
+  .btn-gen:hover { opacity: 0.9; }
+  .btn-gen:active { transform: scale(0.98); }
+  .btn-gen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15));
+  }
+
+  /* Output area */
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .output-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+  .btn-copy-all {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .btn-copy-all:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(0,230,118,0.06);
+  }
+
+  #uuid-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  #uuid-list::-webkit-scrollbar { width: 4px; }
+  #uuid-list::-webkit-scrollbar-track { background: transparent; }
+  #uuid-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .uuid-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.25s ease both;
+  }
+  .uuid-row:hover { border-color: rgba(0,229,255,0.3); }
+  .uuid-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 22px;
+    text-align: right;
+  }
+  .uuid-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    flex: 1;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+  }
+  .uuid-text .dash { color: var(--muted); }
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Manifest helper */
+  .manifest-card .card-label { color: var(--accent2); }
+  .manifest-card::before { background: var(--accent2); }
+
+  .manifest-output {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--text);
+    position: relative;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .json-key { color: #82aaff; }
+  .json-str { color: #c3e88d; }
+  .json-num { color: #f78c6c; }
+  .json-brace { color: var(--muted); }
+
+  .manifest-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .btn-small {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-small:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(124,77,255,0.06); }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--green);
+    color: #000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-weight: bold;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo-tag">// Minecraft Addon Tools</div>
+    <h1>UUID <span>Generator</span></h1>
+    <div class="subtitle">v4 · RFC 4122 Compliant</div>
+  </header>
+
+  <!-- Generator card -->
+  <div class="card">
+    <div class="card-label">// config</div>
+    <div class="count-row">
+      <span class="count-label">จำนวน</span>
+      <div class="count-btns">
+        <button onclick="changeCount(-1)">−</button>
+        <input id="count-display" type="number" value="2" min="1" max="50" readonly>
+        <button onclick="changeCount(1)">+</button>
+      </div>
+    </div>
+    <div class="presets">
+      <button class="chip active" onclick="setCount(2,this)">2 (manifest)</button>
+      <button class="chip" onclick="setCount(4,this)">4</button>
+      <button class="chip" onclick="setCount(6,this)">6</button>
+      <button class="chip" onclick="setCount(10,this)">10</button>
+      <button class="chip" onclick="setCount(20,this)">20</button>
+    </div>
+  </div>
+
+  <button class="btn-gen" onclick="generate()">⚡ Generate UUID</button>
+
+  <!-- Output -->
+  <div class="card">
+    <div class="output-header">
+      <div class="card-label" style="margin:0">// output</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="output-count" id="out-count"></span>
+        <button class="btn-copy-all" onclick="copyAll()">copy all</button>
+      </div>
+    </div>
+    <div id="uuid-list">
+      <div class="empty-state">กด Generate เพื่อสร้าง UUID</div>
+    </div>
+  </div>
+
+  <!-- Manifest helper -->
+  <div class="card manifest-card">
+    <div class="card-label">// manifest.json helper</div>
+    <div class="manifest-output" id="manifest-out">กด Generate ก่อนเพื่อดู manifest template</div>
+    <div class="manifest-actions">
+      <button class="btn-small" onclick="copyManifest()">copy manifest</button>
+      <button class="btn-small" onclick="regenManifest()">regen UUIDs</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentCount = 2;
+  let lastUUIDs = [];
+
+  function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
+  function colorUUID(uuid) {
+    return uuid.replace(/([0-9a-f]+)(-?)/g, (_, hex, dash) =>
+      `<span>${hex}</span>${dash ? '<span class="dash">-</span>' : ''}`
+    );
+  }
+
+  function generate() {
+    const count = parseInt(document.getElementById('count-display').value) || 2;
+    lastUUIDs = Array.from({length: count}, uuidv4);
+    renderList(lastUUIDs);
+    updateManifest();
+  }
+
+  function renderList(uuids) {
+    const list = document.getElementById('uuid-list');
+    document.getElementById('out-count').textContent = `${uuids.length} items`;
+    list.innerHTML = uuids.map((u, i) => `
+      <div class="uuid-row" style="animation-delay:${i*30}ms">
+        <span class="uuid-num">${i+1}</span>
+        <span class="uuid-text">${colorUUID(u)}</span>
+        <button class="btn-copy" onclick="copyOne('${u}', this)" title="copy">⎘</button>
+      </div>
+    `).join('');
+  }
+
+  function updateManifest() {
+    if (lastUUIDs.length < 2) return;
+    const headerUUID = lastUUIDs[0];
+    const moduleUUID = lastUUIDs[1];
+    const out = document.getElementById('manifest-out');
+    out.innerHTML = hl(`{
+  "format_version": 2,
+  "header": {
+    "name": "§lYour Pack Name",
+    "description": "§lPack description",
+    "uuid": "${headerUUID}",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 0]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "${moduleUUID}",
+      "version": [1, 0, 0]
+    }
+  ]
+}`);
+  }
+
+  function hl(json) {
+    return json
+      .replace(/("[\w\s\/\[\]§.,]+")(\s*:)/g, '<span class="json-key">$1</span>$2')
+      .replace(/:\s*("([^"]*)")/g, (m, full) => ': <span class="json-str">' + full + '</span>')
+      .replace(/:\s*(\d[\d., ]*)/g, (m, n) => ': <span class="json-num">' + n + '</span>')
+      .replace(/[{}[\]]/g, m => `<span class="json-brace">${m}</span>`);
+  }
+
+  function copyOne(uuid, btn) {
+    navigator.clipboard.writeText(uuid).then(() => {
+      btn.textContent = '✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '⎘'; btn.classList.remove('copied'); }, 1500);
+    });
+  }
+
+  function copyAll() {
+    if (!lastUUIDs.length) return;
+    navigator.clipboard.writeText(lastUUIDs.join('\n'));
+    showToast('COPIED ' + lastUUIDs.length + ' UUIDs');
+  }
+
+  function copyManifest() {
+    if (lastUUIDs.length < 2) return;
+    const headerUUID = lastUUIDs[0];
+    const moduleUUID = lastUUIDs[1];
+    const text = `{
+  "format_version": 2,
+  "header": {
+    "name": "§lYour Pack Name",
+    "description": "§lPack description",
+    "uuid": "${headerUUID}",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 0]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "${moduleUUID}",
+      "version": [1, 0, 0]
+    }
+  ]
+}`;
+    navigator.clipboard.writeText(text);
+    showToast('MANIFEST COPIED');
+  }
+
+  function regenManifest() {
+    if (lastUUIDs.length >= 2) {
+      lastUUIDs[0] = uuidv4();
+      lastUUIDs[1] = uuidv4();
+      renderList(lastUUIDs);
+      updateManifest();
+    }
+  }
+
+  function changeCount(delta) {
+    const el = document.getElementById('count-display');
+    let v = parseInt(el.value) + delta;
+    v = Math.max(1, Math.min(50, v));
+    el.value = v;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+
+  function setCount(n, btn) {
+    document.getElementById('count-display').value = n;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // auto generate on load
+  generate();
+</script>
+</body>
+</html>
